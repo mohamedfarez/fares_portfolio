@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Github, Linkedin, Mail } from 'lucide-react';
+import { Github, Linkedin, Mail, MessageCircle } from 'lucide-react';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -84,6 +84,14 @@ export function Footer() {
                 className="w-8 h-8 rounded-lg bg-ai-blue text-white flex items-center justify-center hover:bg-ai-blue/90 transition-colors duration-200"
               >
                 <Mail className="w-4 h-4" />
+              </a>
+              <a
+                href="https://wa.me/201023629575"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-colors duration-200"
+              >
+                <MessageCircle className="w-4 h-4" />
               </a>
             </div>
           </div>

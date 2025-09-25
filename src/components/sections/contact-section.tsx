@@ -1,11 +1,49 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Github, Linkedin } from 'lucide-react';
+import { Mail, Phone, MapPin, Github, Linkedin, MessageCircle } from 'lucide-react';
 
 export function ContactSection() {
   const t = useTranslations('contact');
+
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+
+  // Refs for focusing
+  const subjectRef = useRef<HTMLInputElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  // Handle quick option clicks
+  const handleQuickOption = (optionType: 'job' | 'collaboration' | 'consultation') => {
+    const messages = t.raw('quickOptionsMessages');
+    const option = messages[optionType];
+
+    setFormData(prev => ({
+      ...prev,
+      subject: option.subject,
+      message: option.message
+    }));
+
+    // Focus on subject field after a short delay
+    setTimeout(() => {
+      subjectRef.current?.focus();
+    }, 100);
+  };
+
+  // Handle input changes
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   return (
     <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8">
@@ -39,22 +77,32 @@ export function ContactSection() {
                 <input
                   type="text"
                   placeholder={t('form.name')}
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
                   className="px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ai-blue/50"
                 />
                 <input
                   type="email"
                   placeholder={t('form.email')}
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                   className="px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ai-blue/50"
                 />
               </div>
               <input
+                ref={subjectRef}
                 type="text"
                 placeholder={t('form.subject')}
+                value={formData.subject}
+                onChange={(e) => handleInputChange('subject', e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ai-blue/50"
               />
               <textarea
+                ref={messageRef}
                 rows={6}
                 placeholder={t('form.message')}
+                value={formData.message}
+                onChange={(e) => handleInputChange('message', e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-ai-blue/50 resize-none"
               />
               <button
@@ -70,15 +118,16 @@ export function ContactSection() {
               <p className="text-sm font-medium">Quick Options:</p>
               <div className="flex flex-wrap gap-2">
                 {[
-                  t('quickOptions.0'),
-                  t('quickOptions.1'),
-                  t('quickOptions.2'),
+                  { text: t('quickOptions.0'), type: 'job' as const },
+                  { text: t('quickOptions.1'), type: 'collaboration' as const },
+                  { text: t('quickOptions.2'), type: 'consultation' as const },
                 ].map((option, index) => (
                   <button
                     key={index}
-                    className="px-3 py-1 text-sm rounded-full bg-muted hover:bg-accent transition-colors duration-200"
+                    onClick={() => handleQuickOption(option.type)}
+                    className="px-3 py-1 text-sm rounded-full bg-muted hover:bg-accent hover:scale-105 transition-all duration-200 cursor-pointer"
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>
@@ -130,6 +179,14 @@ export function ContactSection() {
                   className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-800 text-white hover:bg-gray-900 transition-colors duration-200"
                 >
                   <Github className="w-6 h-6" />
+                </a>
+                <a
+                  href="https://wa.me/201023629575"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-12 h-12 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors duration-200"
+                >
+                  <MessageCircle className="w-6 h-6" />
                 </a>
               </div>
             </div>

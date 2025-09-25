@@ -13,8 +13,7 @@
     "build:analyze": "ANALYZE=true next build",
     "export": "next export",
     "test": "echo \"No tests specified\" && exit 0",
-    "clean": "rm -rf .next out",
-    "prepare": "husky install || true"
+    "clean": "rm -rf .next out"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.6",
@@ -31,6 +30,7 @@
     "next": "14.2.33",
     "next-intl": "3.4.0",
     "next-themes": "0.2.1",
+    "openai": "^5.23.0",
     "postcss": "8.4.32",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -40,6 +40,7 @@
     "typescript": "5.3.3"
   },
   "devDependencies": {
+    "@svgr/webpack": "^8.1.0",
     "@tailwindcss/typography": "0.5.10",
     "@typescript-eslint/eslint-plugin": "6.17.0",
     "@typescript-eslint/parser": "6.17.0",

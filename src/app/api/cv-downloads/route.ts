@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Simple in-memory storage for demo purposes
-// In production, you'd use a database
+// Simple storage for serverless environment
+// In production, consider using Netlify KV, Supabase, or similar database
+// For now, we'll use a simple counter that resets on deployment
 let downloadCount = 10; // Starting from 10 as requested
+
+// Note: This will reset on each deployment in serverless environment
+// For persistent storage, integrate with a database service
 
 export async function GET() {
   try {

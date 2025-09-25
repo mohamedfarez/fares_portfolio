@@ -51,21 +51,42 @@ export default function ComputerVisionDemo() {
 
   const startCameraDemo = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 640, height: 480 } 
+      // Check if we're in a secure context (HTTPS or localhost)
+      const isSecureContext = typeof window !== 'undefined' &&
+        (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+
+      if (!isSecureContext) {
+        console.warn('Camera requires HTTPS in production. Running in demo mode.');
+        setImageSource('camera');
+        setIsActive(true);
+        simulateDetection();
+        return;
+      }
+
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('Camera API not available. Running in demo mode.');
+        setImageSource('camera');
+        setIsActive(true);
+        simulateDetection();
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 }
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
       }
-      
+
       setImageSource('camera');
       setIsActive(true);
       simulateDetection();
     } catch (error) {
       console.error('Camera access denied:', error);
-      // Simulate demo without camera
+      // Gracefully fallback to demo mode
       setImageSource('camera');
       setIsActive(true);
       simulateDetection();

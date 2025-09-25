@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIEngineerChatEngine } from '@/lib/ai/chat-engine';
 
-// Store chat sessions in memory (in production, use Redis or database)
+// Simple session storage for serverless environment
+// In production, consider using Netlify KV, Supabase, or similar
 const chatSessions = new Map<string, AIEngineerChatEngine>();
+
+// Session cleanup to prevent memory leaks
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const sessionTimestamps = new Map<string, number>();
+
+function cleanupOldSessions() {
+  const now = Date.now();
+  sessionTimestamps.forEach((timestamp, sessionId) => {
+    if (now - timestamp > SESSION_TIMEOUT) {
+      chatSessions.delete(sessionId);
+      sessionTimestamps.delete(sessionId);
+    }
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Clean up old sessions periodically
+    cleanupOldSessions();
+
     const { message, sessionId } = await request.json();
 
     if (!message || !sessionId) {
@@ -21,6 +39,9 @@ export async function POST(request: NextRequest) {
       chatEngine = new AIEngineerChatEngine(sessionId);
       chatSessions.set(sessionId, chatEngine);
     }
+
+    // Update session timestamp
+    sessionTimestamps.set(sessionId, Date.now());
 
     // Process the message
     const response = await chatEngine.processMessage(message);

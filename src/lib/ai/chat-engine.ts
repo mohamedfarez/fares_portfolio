@@ -1,4 +1,5 @@
-import { aiEngineerPersonality } from './sales-manager-personality';
+import { mohamedFaresPersona } from './mohamed-fares-persona';
+import { llmService } from './llm-service';
 
 export interface ChatMessage {
   id: string;
@@ -6,10 +7,11 @@ export interface ChatMessage {
   content: string;
   timestamp: Date;
   metadata?: {
-    salesStep?: number;
+    conversationStage?: number;
     intent?: string;
     sentiment?: 'positive' | 'neutral' | 'negative';
-    leadScore?: number;
+    engagementScore?: number;
+    provider?: string;
   };
 }
 
@@ -31,7 +33,7 @@ export interface ChatContext {
 
 export class AIEngineerChatEngine {
   private context: ChatContext;
-  private personality = aiEngineerPersonality;
+  private persona = mohamedFaresPersona;
 
   constructor(sessionId: string) {
     this.context = {
@@ -88,9 +90,23 @@ export class AIEngineerChatEngine {
   } {
     const lowerMessage = message.toLowerCase();
     
-    // Intent detection
+    // Intent detection - including personal topics
     let intent = 'general_inquiry';
-    if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('budget')) {
+
+    // Personal interests
+    if (lowerMessage.includes('football') || lowerMessage.includes('real madrid') || lowerMessage.includes('كورة') || lowerMessage.includes('ريال')) {
+      intent = 'football_inquiry';
+    } else if (lowerMessage.includes('read') || lowerMessage.includes('book') || lowerMessage.includes('philosophy') || lowerMessage.includes('قراءة') || lowerMessage.includes('كتاب')) {
+      intent = 'reading_inquiry';
+    } else if (lowerMessage.includes('star') || lowerMessage.includes('astronomy') || lowerMessage.includes('universe') || lowerMessage.includes('نجوم') || lowerMessage.includes('فلك')) {
+      intent = 'astronomy_inquiry';
+    } else if (lowerMessage.includes('poetry') || lowerMessage.includes('poem') || lowerMessage.includes('شعر') || lowerMessage.includes('قصيدة')) {
+      intent = 'poetry_inquiry';
+    } else if (lowerMessage.includes('yourself') || lowerMessage.includes('about you') || lowerMessage.includes('who are you') || lowerMessage.includes('نفسك') || lowerMessage.includes('مين انت')) {
+      intent = 'personal_inquiry';
+    }
+    // Professional topics
+    else if (lowerMessage.includes('price') || lowerMessage.includes('cost') || lowerMessage.includes('budget')) {
       intent = 'budget_inquiry';
     } else if (lowerMessage.includes('demo') || lowerMessage.includes('example') || lowerMessage.includes('show')) {
       intent = 'demo_request';
@@ -189,6 +205,16 @@ export class AIEngineerChatEngine {
       this.context.engagementScore += 15;
     } else if (analysis.intent === 'experience_inquiry') {
       this.context.engagementScore += 12;
+    } else if (analysis.intent === 'personal_inquiry') {
+      this.context.engagementScore += 18; // High engagement for personal connection
+    } else if (analysis.intent === 'football_inquiry') {
+      this.context.engagementScore += 25; // Very high for shared interests
+    } else if (analysis.intent === 'reading_inquiry') {
+      this.context.engagementScore += 20; // High for intellectual connection
+    } else if (analysis.intent === 'astronomy_inquiry') {
+      this.context.engagementScore += 22; // High for deep interests
+    } else if (analysis.intent === 'poetry_inquiry') {
+      this.context.engagementScore += 20; // High for creative connection
     }
 
     // Cap the score
@@ -196,86 +222,136 @@ export class AIEngineerChatEngine {
   }
 
   private async generateResponse(userMessage: string, analysis: any): Promise<string> {
-    // Handle concerns first
-    if (analysis.objections.length > 0) {
-      return this.handleConcerns(analysis.objections);
+    try {
+      // Build conversation context for LLM
+      const messages = this.buildLLMMessages(userMessage, analysis);
+
+      // Call LLM service with fallback
+      const response = await llmService.generateResponse({
+        messages,
+        temperature: 0.7,
+        maxTokens: 1000
+      });
+
+      // Update metadata with provider info
+      this.context.messages[this.context.messages.length - 1].metadata = {
+        ...this.context.messages[this.context.messages.length - 1].metadata,
+        provider: response.provider
+      };
+
+      return response.content;
+
+    } catch (error) {
+      console.error('LLM generation failed:', error);
+      // Fallback to template-based response
+      return this.getFallbackResponse(userMessage, analysis);
+    }
+  }
+
+  private buildLLMMessages(userMessage: string, analysis: any): Array<{role: 'system' | 'user' | 'assistant', content: string}> {
+    const messages: Array<{role: 'system' | 'user' | 'assistant', content: string}> = [];
+
+    // Add system prompt with persona
+    messages.push({
+      role: 'system',
+      content: this.buildSystemPrompt(analysis)
+    });
+
+    // Add conversation history (last 10 messages to keep context manageable)
+    const recentMessages = this.context.messages.slice(-10);
+    for (const msg of recentMessages) {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        messages.push({
+          role: msg.role,
+          content: msg.content
+        });
+      }
     }
 
-    // Handle specific intents
-    switch (analysis.intent) {
-      case 'budget_inquiry':
-        return this.handleBudgetInquiry();
-      case 'demo_request':
-        return this.handleDemoRequest();
-      case 'experience_inquiry':
-        return this.handleExperienceInquiry();
-      case 'collaboration_request':
-        return this.handleCollaborationRequest();
-      case 'technical_inquiry':
-        return this.handleTechnicalInquiry();
-      default:
-        return this.handleGeneralInquiry(userMessage, analysis);
-    }
+    // Add current user message
+    messages.push({
+      role: 'user',
+      content: userMessage
+    });
+
+    return messages;
   }
 
-  private handleConcerns(concerns: string[]): string {
-    const concern = concerns[0]; // Handle first concern
-    const responses = this.personality.responses.concernAddressing[concern];
-    if (responses && responses.length > 0) {
-      return responses[Math.floor(Math.random() * responses.length)];
-    }
-    return "I understand your concern. Let me address that for you...";
-  }
+  private buildSystemPrompt(analysis: any): string {
+    let systemPrompt = this.persona.systemPrompt;
 
-  private handleBudgetInquiry(): string {
-    return "Great question! My approach to pricing depends on the project scope and technical complexity. I typically work on a project basis, with costs ranging from $5,000 to $25,000 depending on the AI implementation requirements. My solutions usually deliver ROI within 3-6 months through efficiency gains and improved accuracy. Would you like me to assess your specific technical requirements for a more precise estimate?";
-  }
+    // Add conversation context
+    const messageCount = this.context.messages.length;
 
-  private handleTechnicalInquiry(): string {
-    const expertise = this.personality.responses.expertiseShowcase;
-    const randomExpertise = expertise[Math.floor(Math.random() * expertise.length)];
-    return `${randomExpertise} What specific technical aspect would you like me to elaborate on?`;
-  }
-
-  private handleDemoRequest(): string {
-    return "Absolutely! I'd love to show you my work. You can see live demos right here on this page - check out my SmaTest exam monitoring system, healthcare chatbot, and prompt engineering lab. Which one interests you most? I can also walk you through the technical implementation details of any of these projects.";
-  }
-
-  private handleExperienceInquiry(): string {
-    const achievements = this.personality.responses.achievements;
-    const randomAchievement = achievements[Math.floor(Math.random() * achievements.length)];
-    return `${randomAchievement} I have 1.5+ years of hands-on experience and have worked with companies like Hive Tech, Esaal, and CODSOFT. What specific area of my experience would you like to know more about?`;
-  }
-
-  private handleCollaborationRequest(): string {
-    this.context.currentStage = 5; // Move to collaboration stage
-    const collaborationInvites = this.personality.responses.collaborationInvites;
-    const randomInvite = collaborationInvites[Math.floor(Math.random() * collaborationInvites.length)];
-    return `${randomInvite} You can reach me at mohamedhfares5@gmail.com or +20 1023629575. I'm also available on LinkedIn. What's the best way to continue our technical discussion?`;
-  }
-
-  private handleGeneralInquiry(userMessage: string, analysis: any): string {
-    // Progress through conversation stages
-    const currentStage = this.personality.conversationFlow[this.context.currentStage - 1];
-
-    if (this.context.currentStage === 1) {
-      // First interaction - use greeting
-      const greetings = this.personality.responses.greetings;
-      return greetings[Math.floor(Math.random() * greetings.length)];
-    } else if (this.context.currentStage <= 2) {
-      // Technical discussion phase
-      return "That's an interesting point! What specific technical challenges are you facing in your current setup?";
-    } else if (this.context.currentStage <= 4) {
-      // Expertise showcase
-      const expertiseShowcase = this.personality.responses.expertiseShowcase;
-      const randomShowcase = expertiseShowcase[Math.floor(Math.random() * expertiseShowcase.length)];
-      return randomShowcase;
+    if (messageCount === 0) {
+      systemPrompt += `\n\n🎯 FIRST INTERACTION: Be welcoming and friendly. Introduce yourself naturally and ask what brings them here.`;
+    } else if (messageCount < 4) {
+      systemPrompt += `\n\n💬 EARLY CONVERSATION: Build rapport. Share relevant experiences and ask about their interests.`;
     } else {
-      // Collaboration phase
-      const collaborationInvites = this.personality.responses.collaborationInvites;
-      const randomInvite = collaborationInvites[Math.floor(Math.random() * collaborationInvites.length)];
-      return randomInvite;
+      systemPrompt += `\n\n🤝 ONGOING CONVERSATION: You're getting to know each other. Be more personal and dive deeper into shared interests.`;
     }
+
+    // Add specific guidance based on topic
+    if (analysis.intent) {
+      const intentGuidance: Record<string, string> = {
+        'technical_inquiry': 'Share a brief technical example from your experience. Mix Arabic and English naturally. Ask if they want to see it in action.',
+        'personal_inquiry': 'Share personal stories and interests. Be authentic and relatable. Ask about their own experiences.',
+        'experience_inquiry': 'Tell specific stories from your work experience. Use "أنا" and "كنت" to make it personal.',
+        'project_inquiry': 'Describe your projects with enthusiasm. Mention the challenges and how you solved them.',
+        'collaboration_request': 'Show genuine interest. Ask about their specific needs and share how you can help.',
+        'football_inquiry': 'Share your passion for Real Madrid! Use emojis and be enthusiastic about football.',
+        'reading_inquiry': 'Talk about your love for philosophy and psychology books. Connect it to your AI work.',
+        'astronomy_inquiry': 'Share your fascination with stars and the universe. Be poetic and thoughtful.',
+        'poetry_inquiry': 'Mention how poetry helps you express feelings and experiences.',
+        'demo_request': 'Be enthusiastic about your demos. Explain what they can expect to see.',
+        'budget_inquiry': 'Be professional but friendly about pricing discussions.',
+        'general_inquiry': 'Keep the conversation natural and ask follow-up questions.'
+      };
+
+      systemPrompt += `\n\n🎯 USER INTENT: ${analysis.intent}
+GUIDANCE: ${intentGuidance[analysis.intent] || 'Keep the conversation natural and ask follow-up questions.'}`;
+    }
+
+    // Add conversation metrics for context
+    if (this.context.messages.length > 0) {
+      systemPrompt += `\n\n📊 CONVERSATION CONTEXT:
+- Engagement score: ${this.context.engagementScore}/100
+- Stage: ${this.context.currentStage}/5
+- User interests: ${this.context.userProfile.interests?.join(', ') || 'Still discovering'}`;
+    }
+
+    return systemPrompt;
+  }
+
+  private getFallbackResponse(userMessage: string, analysis: any): string {
+    // Interactive fallback responses when LLM fails
+    const fallbackResponses = [
+      "أهلاً! أنا محمد فارس، AI Engineer وعاشق للـ machine learning 🚀 إيه اللي جابك هنا النهاردة؟",
+      "دي حاجة interesting! حبيت أساعدك فيها. إيه اللي محيرك فيها بالضبط؟ 🤔",
+      "Nice topic! أنا شغلت على حاجة similar قبل كدا. عايز تشوف إزاي عملتها؟",
+      "دا موضوع قريب لقلبي! 😊 إيه اللي خلاك مهتم بالموضوع دا؟",
+      "Cool! دا من المواضيع اللي بحبها. إنت شغال على project معين؟",
+      "حلو! أنا عندي experience في المجال دا. إيه أكبر challenge واجهك فيه؟",
+      "أكيد هساعدك! SmaTest project بتاعي كسب المركز الأول 🏆 إيه اللي عايز تعرفه عنه؟",
+      "ريال مدريد forever! ⚽ بس خلينا نتكلم عن الـ AI كمان 😄 إيه اهتمامك فيه؟"
+    ];
+
+    // Try to match response to user message content
+    const lowerMessage = userMessage.toLowerCase();
+
+    if (lowerMessage.includes('football') || lowerMessage.includes('real madrid') || lowerMessage.includes('كورة')) {
+      return "ريال مدريد forever! ⚽ مش بس بشجعهم، بعيش كل مباراة بحماس جنوني 😄 إنت بتشجع مين؟";
+    }
+
+    if (lowerMessage.includes('read') || lowerMessage.includes('book') || lowerMessage.includes('قراءة')) {
+      return "بحب الفلسفة وعلم النفس كتير 📚 بيساعدوني أفهم الـ human behavior أكتر. إيه آخر كتاب قريته؟";
+    }
+
+    if (lowerMessage.includes('star') || lowerMessage.includes('astronomy') || lowerMessage.includes('نجوم')) {
+      return "النجوم والفلك حاجة تانية خالص! 🌟 بحب أتأمل السماء وأفكر في أسرار الكون. إنت مهتم بالفلك؟";
+    }
+
+    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
   }
 
   public getContext(): ChatContext {

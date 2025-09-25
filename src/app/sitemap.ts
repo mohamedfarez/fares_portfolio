@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://mohamedfares.ai';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-site.netlify.app';
   const currentDate = new Date();
 
   return [

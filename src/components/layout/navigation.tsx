@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Menu, X, Download } from 'lucide-react';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { LanguageToggle } from '@/components/i18n/language-toggle';
+import { RobotWithGlasses } from '@/components/icons/robot-with-glasses';
 import { type Locale } from '@/lib/i18n/config';
 
 export function Navigation() {
@@ -51,17 +52,17 @@ export function Navigation() {
           >
             <div className="relative">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-ai-blue to-ai-purple flex items-center justify-center">
-                <span className="text-white font-bold text-sm">F</span>
+                <RobotWithGlasses className="w-5 h-5 text-white" />
               </div>
               <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-ai-blue to-ai-purple opacity-0 group-hover:opacity-50 blur-sm transition-opacity duration-300" />
             </div>
             <span className="font-bold text-lg bg-gradient-to-r from-ai-blue to-ai-purple bg-clip-text text-transparent">
-              Fares AI
+              {locale === 'ar' ? 'فارس' : 'Fares'}
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
             {navItems.map((item) => (
               <Link
                 key={item.href}

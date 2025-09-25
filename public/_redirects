@@ -1,0 +1,10 @@
+# Netlify redirects file for Next.js App Router
+
+# API routes to serverless functions
+/api/*  /.netlify/functions/:splat  200
+
+# Language redirects
+/  /en  302
+
+# SPA fallback - must be last
+/*  /index.html  200

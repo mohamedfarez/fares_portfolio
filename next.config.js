@@ -2,14 +2,25 @@ const withNextIntl = require('next-intl/plugin')('./src/lib/i18n/config.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // Remove output: 'standalone' for Netlify compatibility
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3000',
+      },
+    ],
     formats: ['image/webp', 'image/avif'],
   },
   env: {
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     GOOGLE_AI_STUDIO_KEY: process.env.GOOGLE_AI_STUDIO_KEY,
+    CEREBRAS_API_KEY: process.env.CEREBRAS_API_KEY,
   },
   webpack: (config, { isServer }) => {
     // Handle SVG imports

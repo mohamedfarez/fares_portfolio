@@ -4,6 +4,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
 import { ChevronDown, MessageCircle, FolderOpen, Mail } from 'lucide-react';
 import { type Locale } from '@/lib/i18n/config';
+import Image from 'next/image';
 
 export function HeroSection() {
   const t = useTranslations('hero');
@@ -18,8 +19,10 @@ export function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto text-center">
-        <div className="space-y-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Text Content */}
+          <div className="text-center lg:text-right space-y-8">
           {/* Greeting */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -126,22 +129,71 @@ export function HeroSection() {
             </button>
           </motion.div>
 
-          {/* Scroll indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1 }}
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-          >
-            <button
-              onClick={() => scrollToSection('ai-twin')}
-              className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-300 group"
+          </div>
+
+          {/* Profile Image */}
+          <div className="flex justify-center lg:justify-start">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="relative"
             >
-              <span className="text-sm">Scroll to explore</span>
-              <ChevronDown className="w-6 h-6 animate-bounce group-hover:text-ai-blue" />
-            </button>
-          </motion.div>
+              {/* Animated background rings */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-ai-blue via-ai-purple to-ai-green opacity-20 animate-pulse" />
+              <div className="absolute inset-2 rounded-full bg-gradient-to-r from-ai-green via-ai-blue to-ai-purple opacity-30 animate-pulse delay-1000" />
+
+              {/* Main image container */}
+              <div className="relative w-80 h-80 rounded-full overflow-hidden border-4 border-white/20 shadow-2xl">
+                <Image
+                  src="/mohamed-fares.jpeg"
+                  alt="Mohamed Fares - AI Engineer"
+                  fill
+                  sizes="(max-width: 768px) 280px, 320px"
+                  className="object-cover"
+                  priority
+                />
+
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+              </div>
+
+              {/* Floating elements */}
+              <motion.div
+                animate={{
+                  y: [-10, 10, -10],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-r from-ai-blue to-ai-purple rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg"
+              >
+                AI
+              </motion.div>
+
+              <motion.div
+                animate={{
+                  y: [10, -10, 10],
+                  rotate: [0, -5, 5, 0]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1
+                }}
+                className="absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-r from-ai-green to-ai-blue rounded-full flex items-center justify-center text-white font-bold shadow-lg"
+              >
+                🚀
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
+
+
       </div>
     </section>
   );

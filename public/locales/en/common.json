@@ -288,9 +288,23 @@
     },
     "quickOptions": [
       "Job Opportunity",
-      "Collaboration", 
+      "Collaboration",
       "AI Consultation"
-    ]
+    ],
+    "quickOptionsMessages": {
+      "job": {
+        "subject": "Job Opportunity Inquiry",
+        "message": "Hello Mohamed,\n\nI'm reaching out regarding a job opportunity in the AI field. I was impressed by your work on [mention specific project] and believe your expertise would be a valuable addition to our team.\n\nCould we schedule a call to discuss the details?\n\nThank you."
+      },
+      "collaboration": {
+        "subject": "Project Collaboration Request",
+        "message": "Hello Mohamed,\n\nI'd like to collaborate with you on a project related to [mention project type]. I've seen your work in AI and believe your expertise would be very beneficial.\n\nAre you interested in discussing a potential collaboration?\n\nLooking forward to hearing from you."
+      },
+      "consultation": {
+        "subject": "AI Consultation Request",
+        "message": "Hello Mohamed,\n\nI need consultation in the AI field for [mention project type or problem]. I've seen your expertise in prompt engineering and computer vision and believe you're the right person to help.\n\nCould we arrange a consultation session?\n\nThank you in advance."
+      }
+    }
   },
   "cv": {
     "title": "Download My CV",

@@ -174,6 +174,15 @@ export class VoiceIntegration {
   }
 
   async startListening(): Promise<void> {
+    // Check if we're in a secure context (HTTPS or localhost)
+    const isSecureContext = typeof window !== 'undefined' &&
+      (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+
+    if (!isSecureContext) {
+      console.warn('Speech recognition requires HTTPS in production');
+      return;
+    }
+
     if (!this.recognition) {
       console.warn('Speech recognition not supported');
       return;
@@ -198,6 +207,21 @@ export class VoiceIntegration {
 
   private async startLipSync(): Promise<void> {
     try {
+      // Check if we're in a secure context (HTTPS or localhost)
+      const isSecureContext = typeof window !== 'undefined' &&
+        (window.location.protocol === 'https:' || window.location.hostname === 'localhost');
+
+      if (!isSecureContext) {
+        console.warn('Microphone access requires HTTPS in production');
+        return;
+      }
+
+      // Check if getUserMedia is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('Microphone API not available');
+        return;
+      }
+
       // Create audio context for lip sync
       this.audioContext = new AudioContext();
       this.analyser = this.audioContext.createAnalyser();
