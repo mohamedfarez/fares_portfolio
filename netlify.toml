@@ -1,10 +1,10 @@
 [build]
-  command = "npm run build"
-  publish = ".next"
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "out"
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_VERSION = "8"
+  NPM_FLAGS = "--legacy-peer-deps"
 
 # Redirect rules for Next.js App Router
 [[redirects]]

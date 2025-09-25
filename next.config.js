@@ -2,8 +2,11 @@ const withNextIntl = require('next-intl/plugin')('./src/lib/i18n/config.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Remove output: 'standalone' for Netlify compatibility
+  // Netlify deployment configuration
+  output: 'export',
+  trailingSlash: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
